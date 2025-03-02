@@ -9,6 +9,7 @@ Repository for students to exchange homework with the instructor.
 ## Installation
    1. Login to GitHub
    2. On this repository, click the **Fork** button in the top-right corner of the page
+   ![](./fork.png)
    3. **Verify** your fork:
     - You'll be automatically redirected to your new forked repository
     - The URL will now show your username instead of the *lkoepsel*
@@ -17,33 +18,23 @@ Repository for students to exchange homework with the instructor.
    ```bash
    git clone https://github.com/student-username/CSIS11_Students.git
    ```
-   - Add this repository as upstream:
+   5. Add this repository as upstream:
    ```bash
-   git remote add upstream https://github.com/your-username/CSIS11_Students.git
+   git remote add upstream https://github.com/lkoepsel/CSIS11_Students.git
    ```
 
-4. Ongoing Operations:
+## Ongoing Operations:
 
-   a. When You Add New Content:
-   - Push changes to your ```main``` branch
-   - Students sync with your updates:
+   1. To sync with *lkoepsel* (or class) updates:
    ```bash
    git fetch upstream
    git merge upstream/main
    ```
 
-   b. For Student Work:
-   - Students create assignment-specific branches:
+   2. For your work:
+   - In *Finder/Explorer/VS Code* create week-specific folders in the ```student``` folder then commit and push to your fork using VS Code or CLI:
    ```bash
-   git checkout -b assignment1
+   git add -A # to add all of the changes
+   git commit -m "adding my changes for week 5" # Commit your changes
+   git push origin # push your change to your repository on GitHub
    ```
-   - They commit and push to their fork:
-   ```bash
-   git push origin assignment1
-   ```
-
-5. Best Practices:
-   - Create clear assignment folders with README files
-   - Include starter code in assignment folders
-   - Use assignment-specific branches for student submissions
-   - Implement clear naming conventions for student work

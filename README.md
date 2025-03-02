@@ -4,7 +4,7 @@ Repository for students to exchange homework with the instructor.
 
 ### Important
 1. **Please make sure your version of this repository on GitHub is private and is accessible by only the instructor and you.**
-2. **Please do NOT make changes or add files to the Instructor folder, as this is where you will be able to download new versions of files from the instructor**
+2. **Please do NOT make changes or add files to the Instructor folder, as this is where you will be able to receive new versions of files from the instructor**
 
 ## Installation
    1. Login to GitHub
@@ -25,14 +25,14 @@ Repository for students to exchange homework with the instructor.
 
 ## Ongoing Operations:
 
-   1. To sync with *lkoepsel* (or class) updates:
+   1. To **sync** with *lkoepsel* (or class) updates:
    ```bash
    git fetch upstream
    git merge upstream/main
    ```
 
-   2. For your work:
-   - In *Finder/Explorer/VS Code* create week-specific folders in the ```student``` folder then commit and push to your fork using VS Code or CLI:
+   2. To **update** your work on GitHub:
+   - Be sure to use the week-specific folders in the ```student``` folder then commit and push to your fork using VS Code or CLI:
    ```bash
    git add -A # to add all of the changes
    git commit -m "adding my changes for week 5" # Commit your changes

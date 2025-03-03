@@ -49,4 +49,39 @@
 
 ### Assignment
 
+For each exercise, please do the following:
+- Write complete, working LC-3 assembly code
+- Include comments explaining your approach
+- Test your code in the LC-3 simulator
+- Document how they handled memory constraints and register usage
 
+**Provide the code developed in code fences after each assignment.**
+
+1. **Variable Declaration and Access**
+   Write LC-3 assembly code to:
+   - Declare a variable named ```COUNT``` with initial value 5
+   - Increment it by 1
+   - Store the result back in ```COUNT```
+
+2. **Case Sensitivity Practice**
+   Determine if these labels refer to the same variable:
+   ```assembly
+   TOTAL   .FILL   #10
+   total   .FILL   #20
+   Total   .FILL   #30
+   ```
+   Explain your answer.
+
+3. **Pointer Usage**
+   Write code to:
+   - Create a pointer variable ```PTR``` that points to a value
+   - Use LDI to load the value it points to into R1
+   - Use STI to store a new value through the pointer
+
+## Simple Math Calculator
+
+### Part 1 - Add and Subtract
+
+1. Create a new folder in your student folder called SMC.
+2. Add a file called add_sub.asm
+3. Write the code which will add or subtract 2 numbers. Be sure to label your variables so they are easy to reference.

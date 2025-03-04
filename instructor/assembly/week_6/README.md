@@ -2,7 +2,7 @@
 ## Instructions
 
 1. **Copy and paste this content into a new file in Week 6 in your student folder.**
-2. Follow the assignment by creating code or pasting images from the simulator into **your file**.
+2. Follow the assignment by writing code or pasting images from the simulator into **your file**.
 
 ## 6a - Learn how to use the tools
 
@@ -54,8 +54,7 @@ For each exercise, please do the following:
 - Include comments explaining your approach
 - Test your code in the LC-3 simulator
 - Document how they handled memory constraints and register usage
-
-**Provide the code developed in code fences after each assignment.**
+- **Provide your code developed, in code fences, after each assignment.**
 
 1. **Variable Declaration and Access**
    Write LC-3 assembly code to:
@@ -84,4 +83,5 @@ For each exercise, please do the following:
 
 1. Create a new folder in your student folder called SMC.
 2. Add a file called add_sub.asm
-3. Write the code which will add or subtract 2 numbers. Be sure to label your variables so they are easy to reference.
+3. Write the code which will add and subtract 2 numbers. Be sure to label your variables so they are easy to reference.
+4. Use a ASCII "+" to determine if you add and an ASCII "-", for subtraction, think of it from a "conditional" perspective.

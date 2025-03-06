@@ -15,32 +15,43 @@
 ### Assignment
 
 #### shift_left_match.asm
+
 1. Copy the file from the instructor/week_6 to your week_6 folder
 1. Make changes such that VALUE is xB0B0 and MATCH is x1600
 2. Run in the simulator and provide a screenshot showing the result when the program has **successfully** finished. 
 ![](../../../changethistoimagename.png)
 
 #### shift_left_n.asm
+
 1. Copy the file from the instructor/week_6 to your week_6 folder
-2. Make changes such that the COUNT is x10
+2. Make changes such that the COUNT is #10 (decimal 10)
 3. What are the numbers shown in the console?
 
-4. What is the last character and why isn't it 10?
+4. What is the last character and why isn't it decimal 10?
 
+```lc3
+
+; remove this comment and paste your code here
+
+```
 
 
 #### addnums.asm
 1. Copy the file from the instructor/week_6 to your week_6 folder
-2. Change the file such that the final count is x0055
+2. Change the file such that the final count is x0085
 2. Run in the simulator and provide a screenshot showing the result when the program has finished. 
 ![](../../../changethistoimagename.png)
 
-#### addnums.asm
+#### addnums.asm -> subnums.asm
 1. Copy the file from the instructor/week_6 to your week_6 folder
-2. Change the file such that the final count is x0055
-2. Run in the simulator and provide a screenshot showing the result when the program has finished. 
-![](../../../changethistoimagename.png)
+2. Change the file such that the values are **subtracted**, instead of added
+2. Paste the complete code here, in between the code fences
+```lc3
 
+; remove this comment and paste your code here
+
+```
+ 
 ## 6b - Explore how to use data
 
 ### Objectives
@@ -63,6 +74,12 @@ For each exercise, please do the following:
    - Increment it by 1
    - Store the result back in ```COUNT```
 
+```lc3
+
+; remove this comment and paste your code here
+
+```
+
 2. **Case Sensitivity Practice**
    Determine if these labels refer to the same variable:
    ```assembly
@@ -72,11 +89,23 @@ For each exercise, please do the following:
    ```
    Explain your answer.
 
+```lc3
+
+; remove this comment and paste your code here
+
+```
+
 3. **Pointer Usage**
    Write code to:
    - Create a pointer variable ```PTR``` that points to a value
    - Use LDI to load the value it points to into R1
    - Use STI to store a new value through the pointer
+
+```lc3
+
+; remove this comment and paste your code here
+
+```
 
 ## Simple Math Calculator
 
@@ -86,3 +115,9 @@ For each exercise, please do the following:
 2. Add a file called add_sub.asm
 3. Write the code which will add and subtract 2 numbers. Be sure to label your variables so they are easy to reference.
 4. Use a ASCII "+" to determine if you add and an ASCII "-", for subtraction, think of it from a "conditional" perspective.
+
+```lc3
+
+; remove this comment and paste your code here
+
+```

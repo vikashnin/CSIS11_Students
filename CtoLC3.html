@@ -1,0 +1,943 @@
+<html>
+<body>
+<h1>C to LC3 Assembly language</h1>
+One of they keys to learning how to write an assembly language is to understand
+how to map high level language constructs to equivalent assembly language.
+Here are the constructs described on this page.
+<ul>
+<li><a href="#variables">Declaring Variables</li></a>
+<li><a href="#assignment">Simple Assignment</li></a>
+<li><a href="#conditionals">Conditionals</li></a>
+<li><a href="#compConditionals">Compound Conditionals</li></a>
+<li><a href="#loops">Loops</li></a>
+<li><a href="#array">Simple Array Access</li></a>
+<li><a href="#advArray">Advanced Array Access</li></a>
+</ul>
+The registers used in the examples are arbitrary. 
+The register you use may be any of the registers. However, you must not use any
+register that contains data you wish to use later, unless that data is also
+stored somewhere in memory. 
+<p>
+Unlike most languages, LC3 assembly is a case insensitive language. You can
+"spell" things in upper case, lower case, or mixed case.
+You may use different "spellings" in different places, but all refer to
+the same thing. For example, <code>blah, BLAH, Blah, BlaH</code> are all
+identical. The <b>only</b> place where case matters is in the
+<code>.STRINGZ</code> pseudo-op which is used to initialize memory with a
+quoted string (e.g. <code>.STRINGZ "Hello World"</code>). The case of the quoted
+string is preserved.
+<hr>
+<h2><a name="variables">Declaring Variables</a></h2>
+To declare a variable, you must give it a name and either initialize it
+or let it be initialized to 0. An array is declared by setting the number of
+elements. All variables declared as shown are global and live for the life of
+the program. You may have local variables that exist on the stack, but those
+are not covered in this document. There is no dynamic allocation
+(<code>malloc()/free()</code>) because no one has written routine(s) to do it.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>
+C code
+</td>
+<td>
+LC3 code
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+int a;        // simple variable (uninitialized)
+int b = 2014; // simple initialized variable
+int c[10];    // array of 10 (uninitialized)
+</code></pre>
+</td>
+<td>
+<pre><code>
+a    .BLKW 1      ; simple variable (or .FILL 0)
+b    .FILL #2014  ; simple initialized variable
+c    .BLKW 10     ; array of ten ints (initialized to 0)
+d    .FILL foobar ; store address of foobar in variable d
+</code></pre>
+</td>
+</tr>
+</table>
+<hr>
+<h2><a name="assignment">Simple Assignment</a></h2>
+The most basic operation is the assignment of one variable to another.
+Most modern computer architectures are load/store. This means that a value must
+be loaded from memory into a register, then written back to memory. There are
+no direct memory to memory copies.
+There may be additional instructions between the <code>LD</code> and
+ <code>ST</code>.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>
+C code
+</td>
+<td>
+LC3 code
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+b = a;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LD R0, a ; load from memory to a register
+ST R0, b ; store from register to memory
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+b = a + 1;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LD R0, a       ; load from memory to a register
+ADD R0, R0, #1 ; increment value
+ST R0, b       ; store from register to memory
+</code></pre>
+</td>
+</tr>
+</table>
+<p>
+When using <code>LD/ST</code>, the location of the variable is fixed at
+assembly time and the location must be within 256 of the instruction.
+If either of these conditions is not met, pointers must be used.
+
+<h3>Assignment using Pointers</h3>
+A pointer is a variable whose contents is the address of something else.
+This is most commonly another variable, but it may be the address of an
+instruction. Since a variable in LC3 is 16 bits, a pointer can access
+any location in the LC3's memory.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>
+C code
+</td>
+<td>
+LC3 code
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+pa = &a;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LEA R0, a  ; get the address of the variable
+ST  R0, pa ; store it in the pointer variable
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+b = *a;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LDI R0, pa ; get the value at the address stored in pa
+ST  R0, b  ; store it in b
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+*pa = b;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LD  R0, b   ; load the value of b
+STI R0, pa  ; store it at the address stored in pa
+</code></pre>
+</td>
+</tr>
+</table>
+
+<p>
+Like the <code>LD/ST</code> instructions, the <code>LDI/STI/LEA</code>
+instructions have a limited range. The pointer variable itself must be
+within 256 of the instruction. The pointer can address anywhere in the
+memory.
+
+<h3>Alternative pointer access</h3>
+The <code>LDR/STR</code> instructions also access memory via pointers. However,
+the value of the pointer is stored in a register instead of a pointer variable.
+This is useful for accessing structures and variable on the stack. Consider a
+simple C structure that represents a date. It contains three integers
+representing a day, month and year. Such a structure might be declared as
+<p>
+<table border=5 rules="all">
+<tr>
+<td>
+C code
+</td>
+<td>
+LC3 code
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+   typedef struct date {
+     int day;
+     int month;
+     int year;
+   } date_t;
+</code></pre>
+</td>
+<td>
+No LC3 equivalent
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+date_t  birthday;     // a date
+date_t* birthday_ptr; // pointer to a date
+</code></pre>
+</td>
+<td>
+<pre><code>
+birthday     .BLKW 3 ; a date is 3 words of memory
+birthday_ptr .BLKW 1 ; a pointer is 1 word of memory
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+birthday_ptr = &birthday;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LEA R0,birthday
+ST  R0,birthday_ptr
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+int d = birthday_ptr->day;
+int m = birthday_ptr->month;
+int y = birthday_ptr->year;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LD R0,birthday_ptr
+LDR R1,R0,#0       ; day is at offset 0
+STR R1,d           ; store in var d
+LDR R1,R0,#1       ; month is at offset 1
+STR R1,m           ; store in var m
+LDR R1,R0,#2       ; year is at offset 2
+STR R1,y           ; store in var y
+</code></pre>
+</td>
+</tr>
+<tr>
+</table>
+<p>
+Note how the address is stored in a register and then different offsets are
+used to access the different fields of a structure. In fact, C has a construct
+<code>offsetof()</code> that is used to compute the address of a field within
+a structure. In LC3 assembly, you must compute the offsets yourself (or write
+your own compiler :( ).
+<p>
+The <code>LDR/STR</code> instructions are also important in accessing method
+parameters and local variables. This is done using offset from the frame
+pointer.
+
+<hr>
+<h2><a name="conditionals">Conditionals</a></h2>
+Conditionals allow different code to be executed depending on values encountered
+when the program is running. In C, we write logical expressions to compare values
+using a variety of symbols (<code>&lt</code>, <code>&gt</code>, <code>==</code>,
+<code>!=</code>, ...). In assembly language we can only test a value and
+determine if it is negative, zero or positive. Therefore, the logical
+expressions in C must be converted to an operation with respect to zero. The
+following table shows the conversion.
+<p>
+<table border=5 rules="all">
+<tr><td>C logical expr</td>
+    <td>C numeric expression</td>
+    <td>LC3 branch instruction</td>
+    <td>LC3 negated branch instruction</td></tr>
+<tr><td><code>if (a &lt b)</code></td>
+    <td><code>if ((a - b) &lt 0)</code></td>
+    <td><code>BRn</code></td>
+    <td><code>BRzp</code></td></tr>
+<tr><td><code>if (a &lt= b)</code></td>
+    <td><code>if ((a - b) &lt= 0)</code></td>
+    <td><code>BRnz</code></td>
+    <td><code>BRp</code></td></tr>
+<tr><td><code>if (a == b)</code></td>
+    <td><code>if ((a - b) == 0)</code></td>
+    <td><code>BRz</code></td>
+    <td><code>BRnp</code></td></tr>
+<tr><td><code>if (a &gt= b)</code></td>
+    <td><code>if ((a - b) &gt= 0)</code></td>
+    <td><code>BRzp</code></td>
+    <td><code>BRn</code></td></tr>
+<tr><td><code>if (a &gt b)</code></td>
+    <td><code>if ((a - b) &gt 0)</code></td>
+    <td><code>BRp</code></td>
+    <td><code>BRnz</code></td></tr>
+<tr><td><code>if (a != b)</code></td>
+    <td><code>if ((a - b) != 0)</code></td>
+    <td><code>BRnp</code></td>
+    <td><code>BRz</code></td></tr>
+<tr><td><code>if (a)</code></td>
+    <td><code>if (a != 0)</code></td>
+    <td><code>BRnp</code></td>
+    <td><code>BRz</code></td></tr>
+<tr><td><code>if (! a)</code></td>
+    <td><code>if (a == 0)</code></td>
+    <td><code>BRz</code></td>
+    <td><code>BRnp</code></td></tr>
+</table>
+<h3>Simple if</h3>
+<p>
+Converting a typical C code with a condition is a two part process. First one
+must generate an LC3 operation that sets the condition code in a way that can
+be used to make a decision. Then one has to conditionally execute or not execute
+some code.
+<p>
+Comparison in LC3 often require subtraction. But, the LC3
+has no subtract operation, so one must change this to addition with a negated
+value..
+Negation is two's complement. The logical structure of a condition in C is
+<i>if condition <b>is</b> true, <b>do</b > the following</i>. If we want the
+structure of assembly language code to mimic the form of the high level code
+(i.e. the code to execute directly follows the test), the test must be changed
+to <i>if condition <b>is not</b> true, <b>skip</b> the following</i>. This is
+done by using the negated test. 
+<p>
+<table border=5 rules="all">
+<tr>
+<td>C code</td>
+<td>LC3 code</td>
+</tr>
+<tr>
+<td>
+<pre></code>
+if (a < b) {
+  // do something
+}
+</code></pre>
+</td>
+<td>
+<pre></code>
+     LD  R0, a       ; load a
+     LD  R1, b       ; load b
+     NOT R1, R1      ; begin 2's complement of b
+     ADD R1, R1, #1  ; R1 now has -b
+     ADD R0, R0, R1  ; R0 = a + (-b)
+                     ; condition code now set
+     BRzp SKIP       ; if false, skip over code
+
+                     ; code to do something (the true clause)
+
+SKIP                 ; remainder of code after if
+</code></pre>
+</td>
+</tr>
+</table>
+<p>
+<h3>Simple if/else</h3>
+Now consider the case of <code>if/else</code>. Now one selects between two
+pieces of code. One is executed if the condition is true, the other if the
+condition is false. To make this change, the <code>else</code> is added as is
+a branch to skip the <code>else</code> if the condition is true. The final code
+becomes:
+<p>
+<table border=5 rules="all">
+<tr>
+<td>C code</td>
+<td>LC3 code</td>
+</tr>
+<tr>
+<td>
+<pre></code>
+if (a < b) {
+  // do something
+}
+else {
+  // do something else
+}
+</code></pre>
+</td>
+<td>
+<pre></code>
+     LD  R0, a       ; load a
+     LD  R1, b       ; load b
+     NOT R1, R1      ; begin 2's complement of b
+     ADD R1, R1, #1  ; R1 now has -b
+     ADD R0, R0, R1  ; R0 = a + (-b)
+                     ; condition code now set
+     BRzp ELSE       ; if false, skip over code
+
+                     ; code to do something (the true clause)
+
+     BR   END_ELSE   ; don't execute else code
+
+ELSE                 ; code for else clause here
+
+END_ELSE             ; remainder of code after else
+</code></pre>
+</td>
+</tr>
+</table>
+
+<h3>Conditions with constants</h3>
+Conditions often involve constants. For example, a typical logical expression
+might be:
+<pre><code>
+  if (score >= 90) {
+    grade = 'A'
+  }
+</code></pre>
+
+When converting this to assembly, one needs to compute <code>score -90</code>.
+One can store the value 90 using an <code>.FILL</code>.
+However, the code will still need to negate it and add 1 to get the negative
+value. An easy alternative is to store the negative value.
+Then the final code will only need to add. Compare the two possibilities in
+the following table.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>code using positive constant</td>
+<td>code using negative constant</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+NINETY .FILL #90        ; the constant 90
+       ...
+       LD R0, score     ; load score
+       LD R1, NINETY    ; start two's complement
+       ADD R1, R1, #1   ; R1 = -90
+       ADD R0, R0, R1   ; R0 = score + (-90)
+       BRn NOT_AN_A     ; didn't get an A
+</code></pre>
+</td>
+<td>
+<pre><code>
+NNINETY .FILL #-90      ; the constant -90
+        ...
+        LD R0, score    ; load score
+        LD R1, NNINETY  ; get -90
+
+        ADD R0, R0, R1  ; R0 = score + (-90)
+        BRn NOT_AN_A    ; didn't get an A
+</code></pre>
+</td>
+</tr>
+</table>
+
+<hr>
+<h2><a name="compConditionals">Compound Conditionals</a></h2>
+
+Conditionals often have multiple conditions connected by logical and/or/not
+(<code>&&/||/!</code>). Code for each individual condition is required.
+In between the code for each condition are branch instructions that branch 
+to the appropriate location as soon as the final result (true/false) is
+known. For example, when you use use a logical and (<code>&&</code>), if
+the first clause is false, the result is false regardless of the second clause.
+ Similarly, if you use logical or (<code>||</code>), and the
+first clause is true, the result is true regardless of the second clause. 
+This is know as short circuiting the evaluation. Of course, if the first
+clause of an and (<code>&&</code>) is true, or the first clause of an or
+(<code>||</code>) is false, the second clause must be evaluated to determine
+the result.
+<p>
+The following code uses "boolean" variables with C's notation of zero being
+false and non-zero being true. If you are translating code with comparisons, you
+must have code to do the subtraction to generate the comparison result.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>C code</td>
+<td>LC3 code</td>
+</tr>
+<tr>
+<td>
+<pre></code>
+if (a || (b && !c)) {
+  // do something
+}
+</code></pre>
+</td>
+<td>
+<pre></code>
+     LD   R0, a      ; load a
+     BRnp DO_IT      ; left clause of or is true so execute
+                     ; get here if a is false
+     LD   R0, b      ; load b
+     BRz SKIP        ; left side of and is false, so skip
+                     ; get here if b is true
+     LD R0, c        ; load C
+     NOT R0,R0       ; negate it (! operation) 
+     BRz SKIP        ; right side of and is false, so skip
+
+DO_IT                ; code to do something (the true clause)
+
+SKIP                 ; remainder of code after if
+</code></pre>
+</td>
+</tr>
+</table>
+
+ 
+
+<hr>
+<h2><a name="loops">Loops</a></h2>
+Loops combine a condition that is used to terminate the loop and
+an unconditional branch which causes the body of the loop to be repeated
+until the termination condition occurs. The test can occur at the
+beginning of the loop, at the end of the loop, or in the middle of the loop.
+Multiple tests and terminations are allowed. As an example, consider the
+<code>for</code> loop of C. The syntax for the <code>for</code> is:
+<p>
+<pre><code>
+  for (initialization; termination condition; increment) {
+    // body of loop
+  }
+</code></pre>   
+<p>
+The <code>for</code> has three distinct parts:
+<ul>
+<li>initialization</li>
+<li>termination test</li>
+<li>increment</li>
+</ul>
+Using the concepts presents in previous sections, we will write three snippets
+of code, one for each section. For an example, we will convert this
+<code>for</code> to LC3 assembly.
+<p>
+<pre><code>
+  for (int i = 0; i < limit; i++) {
+    // body of loop
+  }
+</code></pre>
+<p>
+In the following table, the numbers at the beginning of the line are used for
+reference in the discussion. They do not actually occur in the code.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>C code</td>
+<td>LC3 code</td>
+<td>Optimized LC3 code</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+i = 0;
+</code></pre>
+</td>
+<td>
+<pre><code>
+01:      AND R0, R0, #0 ; AND with 0 yields zero
+02:      ST  R0, i      ; store 0 in i
+</code></pre>
+</td>
+<td>
+<pre><code>
+01:      AND R0, R0, #0 ; AND with 0 yields zero
+02: TOP  ST  R0, i      ; store i (0 1st time)
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+i < limit;
+</code></pre>
+</td>
+<td>
+<pre><code>
+03: TEST LD R0, i       ; get i
+04:      LD R1, limit   ; get limit
+05:      NOT R1, R1     ; two's complement
+06:      ADD R1, R1, #1
+07:      ADD R0, R0, R1 ; compute i - limit
+08:      BRzp END       ; done when (i - limit) >= 0
+</code></pre>
+</td>
+<td>
+<pre><code>
+                        ; R0 contains i
+03:      LD R1, limit   ; get limit
+04:      NOT R1, R1     ; two's complement
+05:      ADD R1, R1, #1
+06:      ADD R0, R0, R1 ; compute i - limit
+07:      BRzp END       ; done when (i - limit) >= 0
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+C code for body
+</code></pre>
+</td>
+<td>
+<pre><code>
+LC3 code for body
+</code></pre>
+</td>
+<td>
+<pre><code>
+LC3 code for body
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+i++
+</code></pre>
+</td>
+<td>
+<pre><code>
+09: INCR LD  R0, i      ; get i
+10:      ADD R0, R0, #1 ; increment it
+11:      ST  R0, i      ; save the new value
+</code></pre>
+</td>
+<td>
+<pre><code>
+08: INCR LD  R0, i      ; get i
+09:      ADD R0, R0, #1 ; increment it
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+
+</code></pre>
+</td>
+<td>
+<pre><code>
+12:      BR TEST        ; go back and test again
+13: END                 ; code after loop completes
+</code></pre>
+</td>
+<td>
+<pre><code>
+10:      BR TOP         ; store and test again
+11: END                 ; code after loop completes
+</code></pre>
+</td>
+</tr>
+</table>
+<p>
+There are redundant instructions  in the above code. In general, it is the job
+of the optimizer to fix this, but if you are writing in assembly language, you
+may choose to do it yourself. For example, consider the use of <code>R0</code>
+to hold the value <code>i</code>. Note that at line <code>02:</code> the
+value of <code>R0</code> is stored in <code>i</code>, only to be immediately
+reloaded at statement <code>03:</code>. And, at line <code>11:</code> the
+updated value of <code>i</code> is also in <code>R0</code>. Thus, the
+<code>LD</code> at line <code>03:</code> is redundant and can be removed. There
+is also an redundant <code>ST</code> instruction.
+A word to the wise, <i><b>first</b> get it correct, <b>then</b> optimize (but
+<b>only</b> if necessary)</i>.
+
+<h4>break/continue</h4>
+
+If you wanted the use the equivalent of C's <code>break</code>, you would use
+a <code>BRnzp END</code> in the body of the loop. If you wanted to use the
+equivalent of C's <code>continue</code>, you would put a 
+<code>BRnzp INCR</code> in the body of the loop.
+
+<h4>while Loop</h4>
+
+A <code>for</code> loop is just a <code>while</code> loop with some extra
+code. The extra code is the initialization and the increment sections.
+The initialization code is removed. The only code at the end of the loop is an
+unconditional branch (<code>BR TEST</code>) back to the termination test.  
+
+<hr>
+<h4>count down loops</h4>
+If the loop variable is just a counter and/or the order of the loop is not
+important, it is oftem more convenient to use a loop that counts down instead
+of up. The increment at the end of the loop becomes a decrement instead.
+The advantage comes fom be able to test the result of the decrement as being
+zero or not. The loop continues as long as the counter is positive. Consider
+the <code>for</code> loop from the previous section.  The syntax for the 
+countdown <code>for</code> loop is:
+<p>
+<pre><code>
+  for (int i = limit; i > 0; i--) {
+    // body of loop
+  }
+</code></pre>
+<p>
+In the following table, the numbers at the beginning of the line are used for
+reference in the discussion. They do not actually occur in the code.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>C code</td>
+<td>LC3 code</td>
+</tr>
+<td>
+<pre><code>
+i = limit;
+</code></pre>
+</td>
+<td>
+<pre><code>
+01:      LD  R0, limit ; intialize loop counter
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+i > 0;
+</code></pre>
+</td>
+<td>
+<pre><code>
+02: TEST LD R0, i       ; get i
+03:      BRnz END       ; done when (i <= 0)
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+C code for body
+</code></pre>
+</td>
+<td>
+<pre><code>
+LC3 code for body
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+i--
+</code></pre>
+</td>
+<td>
+<pre><code>
+04: DECR LD  R0, i      ; get i
+05:      ADD R0, R0, #-1; decrement it
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+
+</code></pre>
+</td>
+<td>
+<pre><code>
+06:      BR TEST        ; go back and test again
+07: END                 ; code after loop completes
+</code></pre>
+</td>
+</tr>
+</table>
+<p>
+If the body of the loop does not use <code>R0</code>, the code can be
+optimized further by removing lines <code>02</code> and <code>04</code>.
+This leaves four lines of LC3 code: a) initialize counter; b) check for
+termination; c) decrement counter; d) go back to check.
+
+<hr>
+<h4>do/while Loop</h4>
+In a <code>do/while</code> loop the termination test occurs at the end of the
+loop. This means the body of the loop will be executed at least once. Since
+the test is at the bottom, one uses the "positive" condition for the test.
+This means that if the condition is true, the code branches back to the
+beginning.
+Consider the C code
+<pre><code>
+  do {
+    // body of the loop
+  } while (i < limit);
+</code></pre>
+<p>
+<table border=5 rules="all">
+<tr>
+<td>C code</td>
+<td>LC3 code</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+do {
+</code></pre>
+</td>
+<td>
+<pre><code>
+DO_TOP ; beginning of loop body
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<pre><code>
+C code for body
+</code></pre>
+</td>
+<td>
+<pre><code>
+LC3 code for body
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<pre><code>
+} while (i < limit);
+</code></pre>
+</td>
+<td>
+<pre><code>
+LD R0, i       ; get i
+LD R1, limit   ; get limit
+NOT R1, R1     ; two's complement
+ADD R1, R1, #1
+ADD R0, R0, R1 ; compute i - limit
+BRn DO_TOP     ; continue while (i - limit) < 0
+</code></pre>
+</td>
+</tr>
+</table>
+
+<hr>
+<h2><a name="array">Simple Array Access</a></h2>
+The following assumes that each element of the array takes <b>one</b> word
+of memory. See the section on Advanced Array Access for more complex examples.
+Array access requires two variable, the array and an index into the array.
+To do this in assembly language, we get the address of the beginning of
+the array, and compute the address of the <i>i-th</i> item by adding the index.
+This is illustrated in the following table.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>C code</td>
+<td>LC3 code</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+b = c[i];
+</code></pre>
+</td>
+<td>
+<pre><code>
+LEA R0, c      ; address of beginning of c
+LD  R1, i      ; load index (i)
+ADD R0, R0, R1 ; compute c + i (address of i-th element)
+LDR R0, R0     ; load c[i]
+ST  R0, b      ; store it back (now b = c[i])
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+c[i] = b;
+</code></pre>
+</td>
+<td>
+<pre><code>
+LEA R0, c      ; address of beginning of c
+LD  R1, i      ; load index (i)
+ADD R0, R0, R1 ; compute c + i (address of i-th element)
+LDR R1, b      ; load b
+STR R1, R0     ; store it back (now c[i] = b)
+</code></pre>
+</td>
+</tr>
+</table>
+<p>
+In C, array access (e.g. <code>c[i]</code>) is equivalent to pointer
+access (e.g. <code>*(c + i)</code>).
+<p>
+<hr>
+<h2><a name="advArray">Advanced Array Access</a></h2>
+The correct way to do array access is to compute
+<code>(c + i*sizeof(element))</code>.
+Each element of the array takes
+the <b>same</b> amount of space, but the size of an element may not be <b>1</b>.
+C provides the construct <code>sizeof()</code> to do this computation.
+Here is an example where the size of each element is greater that 1.
+<p>
+<table border=5 rules="all">
+<tr>
+<td>LC3 code</td>
+</tr>
+<tr>
+<td>
+<pre><code>
+       .ORIG x3000      ; print out an abbreviation of the i-th month
+       LD  R0, I        ; get the index;
+       ADD R0, R0, #-1  ; convert to 0 based index
+       ADD R0, R0, R0
+       ADD R0, R0, R0   ; R0 = 4*I (sizeof each entry is 4)
+       LEA R1, MONTHS   ; R1 is the address of the beginning of the array
+       ADD R0, R0, R1   ; R0 contains address of the I-th element
+       PUTS             ; print out the abbreviation
+       HALT
+I      .BLKW 1          ; the variable I (1-12)
+                        ; an array of strings each 4 characters long
+                        ; 3 char plus terminating null
+MONTHS .STRINGZ "Jan"
+       .STRINGZ "Feb"
+       .STRINGZ "Mar"
+       .STRINGZ "Apr"
+       .STRINGZ "May"
+       .STRINGZ "Jun"
+       .STRINGZ "Jul"
+       .STRINGZ "Aug"
+       .STRINGZ "Sep"
+       .STRINGZ "Oct"
+       .STRINGZ "Nov"
+       .STRINGZ "Dec"
+       .END
+</code></pre>
+</td>
+</tr>
+</table>
+
+<hr>
+(c) Fritz Sieker - Apr 2012
+<p>
+<script language="Javascript">
+document.write("Last modified on: " + document.lastModified +"");
+</script>
+
+</body></html>
+
